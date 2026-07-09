@@ -1,0 +1,27 @@
+# Data (not redistributed)
+data/*
+!data/.gitkeep
+
+# Python
+.venv
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# R / renv
+renv/library
+renv/local
+renv/cellar
+renv/staging
+.Rhistory
+.RData
+.Rproj.user/
+
+# Outputs
+outputs/*
+!outputs/.gitkeep
+
+# OS / editor
+.DS_store
+Thumbs.db
+.vscode/

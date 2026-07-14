@@ -3,7 +3,8 @@ End-to-end synthetic health data pipeline: generation (CART & CTGAN), and evalua
 
 ## Status
 
-Environment setup complete (Python 3.11 + R/renv). Pipeline implementation not started.
+Environment setup complete (Python 3.11 + R/renv). Exploratory data analysis complete.
+Pipeline implementation not started.
 
 ## Setup
 
@@ -51,7 +52,7 @@ sudo apt install -y r-base-dev gfortran liblapack-dev libblas-dev
 sudo xcode-select --install
 ```
 2. Install the GNU Fortran compiler. Download the official universal installer package matching your R version
-(`gfortran-14.2-universal.pkg` for R ≥ 4.5; `gfortran-12.2-universal.pkg` for R 4.3–4.4) from the R-macos GitHub
+(`gfortran-14.2-universal.pkg` for R ≥ 4.5, `gfortran-12.2-universal.pkg` for R 4.3-4.4) from the R-macos GitHub
 releases. Do not use Homebrew for this, as it will conflict with CRAN binaries.
 
 **Windows**
@@ -68,4 +69,24 @@ renv::restore()            # installs synthpop and dependencies from renv.lock
 ```
 
 The project R library is isolated via renv (`renv/library/`, backed by
-renv's user-level cache); nothing installs into the system R library.
+renv's user-level cache). Nothing installs into the system R library.
+
+### Exploratory analysis
+`notebooks/eda.ipynb` documents the exploratory data analysis of the raw Stroke Prediction dataset.
+It examines variable distributions, associations, missingness, class imbalance and rare-record disclosure risk,
+and records the preprocessing decisions that drive the pipeline.
+
+The dataset is the [Stroke Prediction Dataset](https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset/data) by fedesoriano (Kaggle). Licence: "Data files © Original Authors". It is not redistributed in this repository.
+Download from the source and review the terms on the Kaggle page before use.
+
+To run it:
+
+1. Activate the Python environment (see [Setup](#setup))
+2. Download the dataset and extract it. Place `healthcare-dataset-stroke-data.csv` into `data/raw/`.
+3. Launch the notebook:
+
+```bash
+jupyter lab notebooks/eda.ipynb
+```
+
+4. Run all cells: **Kernel -> Restart & Run All**

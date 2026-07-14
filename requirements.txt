@@ -129,6 +129,7 @@ scikit-learn==1.9.0
 scipy==1.17.1
 sdmetrics==0.28.0
 sdv==1.37.3
+seaborn==0.13.2
 send2trash==2.1.0
 setuptools==78.1.0
 six==1.17.0

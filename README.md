@@ -4,6 +4,7 @@ End-to-end synthetic health data pipeline: generation (CART & CTGAN), and evalua
 ## Status
 
 Environment setup complete (Python 3.11 + R/renv). Exploratory data analysis complete.
+Project statement and data dictionary complete. Decision log in progress, updated as the pipeline is built.
 Pipeline implementation not started.
 
 ## Setup
@@ -20,19 +21,19 @@ Pipeline implementation not started.
 ```bash
 uv sync
 ```
- 
+
 **3. Run commands inside the environment**
 ```bash
 uv run pytest
 uv run jupyter lab
 ```
- 
+
 `uv run` executes inside the project environment without activation. To activate
 it in the current shell instead:
 ```bash
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 ```
- 
+
 The environment is CPU-only by design: no GPU, CUDA, or vendor-specific backend
 is required, keeping the pipeline reproducible on any machine.
 
@@ -95,3 +96,14 @@ jupyter lab notebooks/eda.ipynb
 ```
 
 4. Run all cells: **Kernel -> Restart & Run All**
+
+## Documentation
+
+`docs/project_statement.md` states the project's purpose, fidelity levels,
+and disclosure risk requirements, written before generation work began.
+
+`docs/data_dictionary.md` documents every variable's type, role, and description.
+
+`docs/decision_log.md` records engineering and tooling decisions made while
+building the pipeline. Data decisions are recorded in `notebooks/eda.ipynb`.
+

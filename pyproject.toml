@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=82.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "synthetic-health-data-pipeline"
+version = "0.1.0"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+	"torch",
+	"pandas",
+	"numpy",
+	"scikit-learn",
+	"matplotlib",
+	"sdv",
+	"sdmetrics",
+	"anonymeter",
+	"smartnoise-synth",
+	"pydantic",
+	"pyyaml>=6.0",
+	"jupyter",
+	"seaborn",
+]
+
+[dependency-groups]
+dev = ["pytest", "ruff"]
+
+[tool.uv]
+override-dependencies=["pyyaml>=6.0"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true  # Prevents other packages from being pulled from here
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ["*.ipynb"]  # Instructs Ruff to ignore Jupyter notebooks
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

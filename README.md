@@ -16,25 +16,25 @@ Pipeline implementation not started.
  * **macOS/Linux:** `curl -LsSf https://astral.sh/uv/install.sh | sh`
  * **Windows:** `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
 
-**2. Create and activate the environment**
+**2. Create the environment and install dependencies**
 ```bash
-uv venv --python 3.11
+uv sync
+```
+ 
+**3. Run commands inside the environment**
+```bash
+uv run pytest
+uv run jupyter lab
+```
+ 
+`uv run` executes inside the project environment without activation. To activate
+it in the current shell instead:
+```bash
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
-uv pip install -r requirements.txt
 ```
-
-*(Fallback: Plain venv/pip works identically if uv cannot be used)*
-
-```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-The environment is CPU-only by design: no GPU, CUDA, or vendor-specific
-backend is required, keeping the pipeline reproducible on any machine.
-PyTorch is pinned to the CPU build via the extra index declared in
-`requirements.txt`.
+ 
+The environment is CPU-only by design: no GPU, CUDA, or vendor-specific backend
+is required, keeping the pipeline reproducible on any machine.
 
 ### R (via renv)
 
@@ -81,9 +81,14 @@ Download from the source and review the terms on the Kaggle page before use.
 
 To run it:
 
-1. Activate the Python environment (see [Setup](#setup))
+1. Complete the Python setup above (see [Setup](#setup))
 2. Download the dataset and extract it. Place `healthcare-dataset-stroke-data.csv` into `data/raw/`.
 3. Launch the notebook:
+```bash
+uv run jupyter lab notebooks/eda.ipynb
+```
+
+Or, with the environment activated:
 
 ```bash
 jupyter lab notebooks/eda.ipynb

@@ -5,7 +5,7 @@ End-to-end synthetic health data pipeline: generation (CART & CTGAN), and evalua
 
 Environment setup complete (Python 3.11 + R/renv). Exploratory data analysis complete.
 Project statement and data dictionary complete. Decision log in progress, updated as the pipeline is built.
-Pipeline implementation not started.
+Dataset preparation complete. Generation and evaluation not started.
 
 ## Setup
 
@@ -96,6 +96,36 @@ jupyter lab notebooks/eda.ipynb
 ```
 
 4. Run all cells: **Kernel -> Restart & Run All**
+
+### Dataset preparation
+
+`src/prepare_dataset.py` loads the raw dataset, applies the decisions
+recorded in the EDA (drop `id`, drop the single `Other` gender row), and
+writes stratified train, test, and optional validation splits to
+`data/processed/`. Splits are seeded and reproducible, and existing output
+files are never overwritten silently.
+
+Run it with:
+
+```bash
+uv run python src/prepare_dataset.py
+```
+
+Pass `--config-path` to use a config file other than `configs/config.yaml`:
+
+```bash
+uv run python src/prepare_dataset.py --config-path configs/my_config.yaml
+```
+
+## Testing
+
+```bash
+uv run pytest
+```
+
+Runs the full suite: `tests/test_config.py` (config loading and validation)
+and `tests/test_prepare_dataset.py` (data loading, decisions, splitting, and
+output writing).
 
 ## Documentation
 

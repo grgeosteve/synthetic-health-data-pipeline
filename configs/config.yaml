@@ -1,0 +1,19 @@
+# Constants shared across Python and R scripts in this pipeline
+# Specific column and stratification information refer to the Stroke Prediction Dataset.
+
+seed: 24 
+
+paths:
+  raw: data/raw/healthcare-dataset-stroke-data.csv
+  processed_dir: data/processed
+  synthetic_dir: data/synthetic
+  outputs_dir: outputs
+
+split:
+  test_size: 0.2
+  stratify_col: stroke
+
+columns:
+  numeric: [age, avg_glucose_level, bmi]
+  binary: [hypertension, heart_disease, stroke]
+  categorical: [gender, ever_married, work_type, Residence_type, smoking_status]

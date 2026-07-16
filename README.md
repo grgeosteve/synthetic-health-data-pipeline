@@ -104,6 +104,9 @@ recorded in the EDA (drop `id`, drop the single `Other` gender row), and
 writes stratified train, test, and optional validation splits to
 `data/processed/`. Splits are seeded and reproducible, and existing output
 files are never overwritten silently.
+Stratification is verified at runtime, each split's positive rate on the
+stratification column must stay within 0.005 of the overall rate, or the
+script raises an error.
 
 Run it with:
 

@@ -85,7 +85,7 @@ def split(data: pd.DataFrame,
     """
     print("Creating stratified dataset splits...")
     print("Split configuration:")
-    print(f" - Random Seed: {seed}")
+    print(f" - Random seed: {seed}")
     print(f" - Training set ratio: {split_config.train_size:.2f}")
     print(f" - Test set ratio: {split_config.test_size:.2f}")
     print(f" - Validation set ratio: {split_config.val_size if split_config.val_size is not None else 0:.2f}")
@@ -139,17 +139,48 @@ def split(data: pd.DataFrame,
     train_df = train_df.reset_index(drop=True)
     test_df = test_df.reset_index(drop=True)
 
-
     if split_config.val_size is None:
         val_df = None
     else:
         val_df = pd.concat(val_slices).sample(frac=1.0, random_state=seed)
         val_df = val_df.reset_index(drop=True)
 
+    # Runtime check for stratification accuracy validity
+    overall_rate = data[split_config.stratify_col].mean()
+    train_rate = train_df[split_config.stratify_col].mean()
+    test_rate = test_df[split_config.stratify_col].mean()
+
+    tolerance = 0.005
+    if abs(train_rate - overall_rate) >= tolerance:
+        raise ValueError(
+            f"Train stratification deviates from overall rate: "
+            f"{train_rate:.4f} vs {overall_rate:.4f} (tolerance {tolerance})"
+        )
+
+    if abs(test_rate - overall_rate) >= tolerance:
+        raise ValueError(
+            f"Test stratification deviates from overall rate: "
+            f"{test_rate:.4f} vs {overall_rate:.4f} (tolerance {tolerance})"
+        )
+        
+    if val_df is not None:
+        val_rate = val_df[split_config.stratify_col].mean()
+
+        if abs(val_rate - overall_rate) >= tolerance:
+            raise ValueError(
+                f"Val stratification deviates from overall rate: "
+                f"{val_rate:.4f} vs {overall_rate:.4f} (tolerance {tolerance})"
+            )
+
     print("Training set size:", len(train_df))
+    print(f"Train stratification rate: {train_rate:.4f} vs overall {overall_rate:.4f}")
+
     print("Test set size:", len(test_df))
+    print(f"Test stratification rate: {test_rate:.4f} vs overall {overall_rate:.4f}")
+
     if val_df is not None:
         print("Validation set size:", len(val_df))
+        print(f"Val stratification rate: {val_rate:.4f} vs overall {overall_rate:.4f}")
     print("Splitting complete.")
 
     return train_df, test_df, val_df
@@ -219,7 +250,7 @@ def _parse_arguments() -> argparse.Namespace:
 def main() -> None:
     args = _parse_arguments()
 
-    print("Preprocessing dataset...")
+    print("Preparing dataset...")
 
     if args.config_path:
         config = load_config(args.config_path)
@@ -231,7 +262,7 @@ def main() -> None:
     train, test, val = split(data, config.split, config.seed)
     write_outputs(config.paths.processed_dir, train, test, val)
 
-    print("Preprocessing completed successfully.")
+    print("Dataset preparation completed successfully.")
 
 if __name__ == "__main__":
     main()

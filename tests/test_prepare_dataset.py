@@ -143,3 +143,28 @@ def test_write_outputs_prevents_overwrite(tmp_path, sample_df):
     
     with pytest.raises(ValueError, match="already exists"):
         write_outputs(dst, train, test, None)
+
+# --- Tests for stratification correctness ---
+def test_split_preserves_stratification_rate(sample_df):
+    split_cfg = Split(test_size=0.2, stratify_col="target")
+    train, test, val = split(sample_df, split_cfg, seed=42)
+
+    overall_rate = sample_df["target"].mean()
+    assert abs(train["target"].mean() - overall_rate) < 0.005
+    assert abs(test["target"].mean() - overall_rate) < 0.005
+
+def test_split_raises_on_stratification_deviation():
+    """Force group sizes where truncation alone pushes the split rate
+    beyond tolerance, confirming the guard actually fires."""
+    # 100 majority rows, 3 minority rows: truncation on the tiny group
+    # produces a rate deviation that comfortably exceeds 0.005.
+    df = pd.DataFrame({
+        "id": list(range(103)),
+        "gender": ["Male"] * 103,
+        "bmi": [20.0] * 103,
+        "target": [0] * 100 + [1] * 3,
+    })
+    split_cfg = Split(test_size=0.2, stratify_col="target")
+
+    with pytest.raises(ValueError, match="stratification deviates"):
+        split(df, split_cfg, seed=42)

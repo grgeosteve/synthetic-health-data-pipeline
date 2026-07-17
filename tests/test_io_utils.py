@@ -75,3 +75,21 @@ def test_write_csv_prevents_overwrite(tmp_path, sample_df):
 
     # confirm the existing file was not touched
     assert path.read_text() == "existing content"
+
+def test_write_csv_writes_explicit_na_token(tmp_path):
+    """Missing values must be written as the literal 'NA' token, not a
+    blank field, since these files are also read by R."""
+
+    df = pd.DataFrame({"a": [1, 2, None, 4]})
+    path = tmp_path / "out.csv"
+    write_csv(path, df)
+
+    content = path.read_text()
+    assert ",NA" not in content  # sanity: no accidental double-write
+
+    lines = content.strip().split("\n")
+    assert lines[3] == "NA"  # row with the missing value, single-column csv
+
+    # confirm it round-trips correctly when read back
+    reloaded = pd.read_csv(path)
+    assert reloaded["a"].isnull().tolist() == [False, False, True, False]

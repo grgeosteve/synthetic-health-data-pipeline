@@ -30,3 +30,25 @@ use it instead of their own copies.
 **Consequence.** File-loading and file-writing error handling is defined once. 
 Consumers lost no behaviour, and every subsequent processing script will not
 duplicate logic.
+
+## 3. write_csv writes an explicit "NA" token instead of a blank field
+
+**Context.** Pandas' to_csv default writes missing values as a blank field.
+The files will also be read by R (synthpop). Base R's read.csv
+treats a blank field as NA automatically for numeric columns, but not for
+character columns, where it imports as a literal empty string unless
+na.strings is configured to include it. This project's only column with
+missingness (bmi) is numeric, so the blank-field default is not currently
+causing a problem, but the categorical synthesis logic already anticipates
+categorical missingness occurring later.
+
+**Decision.** write_csv now writes missing values as the literal token
+"NA" (na_rep="NA"), R's own default na.strings value, rather than relying
+on blank-field interpretation matching across both languages' parsers by
+default.
+
+**Consequence.** Tested the change in `write_csv` is handled correctly,
+and that when re-read by pandas it is correctly handled as a missing value
+(dtype and null positions preserved). This removes a silent-corruption risk for any future
+categorical column with missingness, at no cost to the current numeric-only
+case.

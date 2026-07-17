@@ -42,7 +42,9 @@ def load_csv(path: Path) -> pd.DataFrame:
 def write_csv(path:Path, data: pd.DataFrame) -> None:
     """Write a pandas DataFrame to a CSV file.
 
-    Creates the parent directory if needed. Guards againt silent overwrite of an existing file.
+    Creates the parent directory if needed. Guards against silent overwrite of an existing file.
+    Missing values are written as the literal token "NA", R's own default missing-value representation,
+    rather than a blank field.
 
     Args:
         path (Path):         Destination file path.
@@ -62,7 +64,7 @@ def write_csv(path:Path, data: pd.DataFrame) -> None:
                 f"File {path} already exists. Please delete or rename it before proceeding."
             )
 
-        data.to_csv(path, index=False)
+        data.to_csv(path, index=False, na_rep="NA")
 
     except PermissionError as e:
         raise PermissionError(f"Permission denied: Unable to write data to {path}") from e

@@ -1,17 +1,14 @@
-from pathlib import Path
-
 import pandas as pd
 import pytest
 
 from src.config import Split
-from src.prepare_dataset import apply_decisions, load_raw, split, write_outputs
+from src.prepare_dataset import apply_decisions, split, write_outputs
 
+SEED = 24
 
 @pytest.fixture
 def sample_df():
     """Provides a sample dataframe for processing and splitting tests."""
-    # Increased size to 20 rows to ensure split ratios work correctly during stratification
-    # 10 targets of 0, 10 targets of 1
     data = {
         "id": list(range(1, 21)),
         "gender": ["Male", "Female", "Other", "Male", "Female", "Male", "Female", "Male", "Female", "Male"] * 2,
@@ -26,31 +23,6 @@ def csv_file(tmp_path, sample_df):
     path = tmp_path / "raw_data.csv"
     sample_df.to_csv(path, index=False)
     return path
-
-# --- Tests for load_raw ---
-
-def test_load_raw_success(csv_file):
-    df = load_raw(csv_file)
-    assert isinstance(df, pd.DataFrame)
-    assert len(df) == 20
-
-def test_load_raw_file_not_found():
-    with pytest.raises(FileNotFoundError):
-        load_raw(Path("non_existent.csv"))
-
-def test_load_raw_empty_file(tmp_path):
-    empty_file = tmp_path / "empty.csv"
-    empty_file.write_text("") # Completely empty
-    with pytest.raises(pd.errors.EmptyDataError):
-        load_raw(empty_file)
-
-def test_load_raw_parser_error(tmp_path):
-    bad_file = tmp_path / "bad.csv"
-    # Unbalanced quotes are a reliable way to trigger a pandas.errors.ParserError
-    bad_file.write_text('col1,col2\n"unclosed quote,1\n4,5,6')
-
-    with pytest.raises(Exception): # Catch the custom Exception wrapper in load_raw
-        load_raw(bad_file)
 
 # --- Tests for apply_decisions ---
 
@@ -73,7 +45,7 @@ def test_split_no_val(sample_df):
     # Use 0.2 test size (80% train, 20% test)
     split_cfg = Split(test_size=0.2, stratify_col="target")
     
-    train, test, val = split(sample_df, split_cfg, seed=42)
+    train, test, val = split(sample_df, split_cfg, seed=SEED)
     
     assert val is None
     assert len(train) + len(test) == len(sample_df)
@@ -84,7 +56,7 @@ def test_split_with_val(sample_df):
     # 0.2 test, 0.2 val (60% train)
     split_cfg = Split(test_size=0.2, val_size=0.2, stratify_col="target")
     
-    train, test, val = split(sample_df, split_cfg, seed=42)
+    train, test, val = split(sample_df, split_cfg, seed=SEED)
     
     assert val is not None
     assert len(train) + len(test) + len(val) == len(sample_df)
@@ -104,7 +76,7 @@ def test_split_raises_on_undersized_group():
     split_cfg = Split(test_size=0.2, val_size=0.2, stratify_col="target")
 
     with pytest.raises(ValueError, match="produced 0"):
-        split(df, split_cfg, seed=42)
+        split(df, split_cfg, seed=SEED)
 
 def test_split_raises_on_undersized_group_train():
     """Same guard, triggered on the train partition instead of test."""
@@ -117,7 +89,7 @@ def test_split_raises_on_undersized_group_train():
     split_cfg = Split(test_size=0.4, val_size=0.4, stratify_col="target")
 
     with pytest.raises(ValueError):
-        split(df, split_cfg, seed=42)
+        split(df, split_cfg, seed=SEED)
 
 # --- Tests for write_outputs ---
 
@@ -147,7 +119,7 @@ def test_write_outputs_prevents_overwrite(tmp_path, sample_df):
 # --- Tests for stratification correctness ---
 def test_split_preserves_stratification_rate(sample_df):
     split_cfg = Split(test_size=0.2, stratify_col="target")
-    train, test, val = split(sample_df, split_cfg, seed=42)
+    train, test, val = split(sample_df, split_cfg, seed=SEED)
 
     overall_rate = sample_df["target"].mean()
     assert abs(train["target"].mean() - overall_rate) < 0.005
@@ -167,4 +139,4 @@ def test_split_raises_on_stratification_deviation():
     split_cfg = Split(test_size=0.2, stratify_col="target")
 
     with pytest.raises(ValueError, match="stratification deviates"):
-        split(df, split_cfg, seed=42)
+        split(df, split_cfg, seed=SEED)

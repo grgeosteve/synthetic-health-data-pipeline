@@ -8,39 +8,8 @@ from pathlib import Path
 import pandas as pd
 
 from src.config import Split, load_config
+from src.io_utils import load_csv, write_csv
 
-
-def load_raw(path: Path) -> pd.DataFrame:
-    """ Load the raw dataset from a CSV file.
-
-    Args:
-        path (Path): Path to the raw CSV file.
-
-    Raises:
-        FileNotFoundError:          If the file does not exist at the provided path.
-        pd.errors.EmptyDataError:   If the CSV file is empty.
-        pd.errors.ParserError:      If the CSV is malformed and cannot be parsed.
-        Exception:                  For any other unexpected errors during loading.
-
-    Returns:
-        pd.DataFrame: The loaded dataset in pandas DataFrame format.
-    """
-    print(f"Loading dataset from {path}...")
-
-    try:
-        data = pd.read_csv(path)
-
-        print("Loading completed successfully.")
-        return data
-
-    except FileNotFoundError as e:
-        raise FileNotFoundError(f"The raw data file was not found at: {path}") from e
-    except pd.errors.EmptyDataError as e:
-        raise pd.errors.EmptyDataError(f"The CSV file at {path} is empty.") from e
-    except pd.errors.ParserError as e:
-        raise pd.errors.ParserError(f"Failed to parse the CSV file at {path}. Please check the file format.") from e
-    except Exception as e:
-        raise Exception(f"An unexpected error occurred while loading {path}") from e
 
 def apply_decisions(data: pd.DataFrame) -> pd.DataFrame:
     """ Apply the data decisions surfaced from the EDA.
@@ -196,44 +165,32 @@ def write_outputs(dst_dir: Path, train: pd.DataFrame, test: pd.DataFrame, val: p
         val (pd.DataFrame | None):  (Optional) validation set pandas DataFrame
 
     Raises:
+        ValueError:                  If a target file already exists.
         OSError:                     If the directory cannot be created or files cannot be written.
         PermissionError:             If the process lacks permissions to write to the destination.
         Exception:                   For any other unexpected errors during the write process.
-        ValueError:                  If a target file already exists.
     """
     print("Writing dataset splits to disk...")
-    try:
-        dst_dir.mkdir(parents=True, exist_ok=True)
 
-        train_path = dst_dir / 'train.csv'
-        test_path = dst_dir / 'test.csv'
-        val_path = dst_dir / 'val.csv'
+    train_path = dst_dir / 'train.csv'
+    test_path = dst_dir / 'test.csv'
+    val_path = dst_dir / 'val.csv'
 
-        # Prevent silent overwrites
-        if train_path.is_file():
-            raise ValueError(f"Training csv file {train_path} already exists. "
-                             "Please delete or rename it before proceeding.")
-        if test_path.is_file():
-            raise ValueError(f"Test csv file {test_path} already exists. "
-                             "Please delete or rename it before proceeding.")
-        if val is not None and val_path.is_file():
-            raise ValueError(f"Validation csv file {val_path} already exists. "
-                             "Please delete or rename it before proceeding.")
+    # Prevent silent overwrites
+    if train_path.is_file():
+        raise ValueError(f"Training csv file {train_path} already exists. "
+                         "Please delete or rename it before proceeding.")
+    if test_path.is_file():
+        raise ValueError(f"Test csv file {test_path} already exists. "
+                         "Please delete or rename it before proceeding.")
+    if val is not None and val_path.is_file():
+        raise ValueError(f"Validation csv file {val_path} already exists. "
+                         "Please delete or rename it before proceeding.")
 
-        train.to_csv(train_path, index=False)
-        test.to_csv(test_path, index=False)
-
-        if val is not None:
-            val.to_csv(val_path, index=False)
-
-    except PermissionError as e:
-        raise PermissionError(f"Permission denied: Unable to write to directory {dst_dir}") from e
-    except OSError as e:
-        raise OSError(f"OS error occurred while writing outputs to {dst_dir}") from e
-    except ValueError as e:
-        raise e
-    except Exception as e:
-        raise Exception(f"An unexpected error occurred while saving processed data to {dst_dir}") from e
+    write_csv(train_path, train)
+    write_csv(test_path, test)
+    if val is not None:
+        write_csv(val_path, val)
 
     print("Splits written to disk successfully.")
 
@@ -257,7 +214,7 @@ def main() -> None:
     else:
         config = load_config()
 
-    data = load_raw(config.paths.raw)
+    data = load_csv(config.paths.raw)
     data = apply_decisions(data)
     train, test, val = split(data, config.split, config.seed)
     write_outputs(config.paths.processed_dir, train, test, val)

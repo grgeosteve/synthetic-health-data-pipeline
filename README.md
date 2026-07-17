@@ -5,7 +5,8 @@ End-to-end synthetic health data pipeline: generation (CART & CTGAN), and evalua
 
 Environment setup complete (Python 3.11 + R/renv). Exploratory data analysis complete.
 Project statement and data dictionary complete. Decision log in progress, updated as the pipeline is built.
-Dataset preparation complete. Generation and evaluation not started.
+Dataset preparation complete. Low-fidelity synthetic data generation complete. CART and CTGAN generation,
+and evaluation not started.
 
 ## Setup
 
@@ -120,15 +121,41 @@ Pass `--config-path` to use a config file other than `configs/config.yaml`:
 uv run python src/prepare_dataset.py --config-path configs/my_config.yaml
 ```
 
+### Low-fidelity synthetic data (L2 - univariate)
+
+`src/generate_low_fidelity.py` synthesises a low-fidelity dataset from
+`data/processed/train.csv`. Each column is fit and sampled independently, numeric
+columns via a KDE estimate, and categorical and binary columns from the observed frequency table,
+so no inter-variable relationships are preserved. Missingness is reproduced per column at its
+observed rate independently. Column groupings are validated against the config file (`configs/config.yaml`)
+before generation begins, and generation fails clearly if the config and the data disagree.
+
+Run it with:
+
+```bash
+uv run python src/generate_low_fidelity.py
+```
+
+Pass `--config-path` to use a config file other than `configs/config.yaml`:
+
+```bash
+uv run python src/generate_low_fidelity.py --config-path configs/my_config.yaml
+```
+
+Output is written to `data/synthetic/low_fidelity.csv`.
+
 ## Testing
 
 ```bash
 uv run pytest
 ```
 
-Runs the full suite: `tests/test_config.py` (config loading and validation)
-and `tests/test_prepare_dataset.py` (data loading, decisions, splitting, and
-output writing).
+Runs the full suite: `tests/test_config.py` (config loading and validation),
+`tests/test_io_utils.py` (shared file loading and writing),
+`tests/test_column_utils.py` (column-schema validation),
+`tests/test_prepare_dataset.py` (data loading, decisions, splitting, and
+output writing), and `tests/test_generate_low_fidelity.py` (structural checks
+on the low-fidelity generator).
 
 ## Documentation
 

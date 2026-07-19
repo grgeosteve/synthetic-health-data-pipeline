@@ -5,8 +5,8 @@ End-to-end synthetic health data pipeline: generation (CART & CTGAN), and evalua
 
 Environment setup complete (Python 3.11 + R/renv). Exploratory data analysis complete.
 Project statement and data dictionary complete. Decision log in progress, updated as the pipeline is built.
-Dataset preparation complete. Low-fidelity synthetic data generation complete. CART and CTGAN generation,
-and evaluation not started.
+Dataset preparation complete. Low-fidelity univariate, and high-fidelity multivariate (CTGAN) synthetic data generation complete.
+Multivariate generation through synthpop and evaluation not started.
 
 ## Setup
 
@@ -74,6 +74,7 @@ The project R library is isolated via renv (`renv/library/`, backed by
 renv's user-level cache). Nothing installs into the system R library.
 
 ### Exploratory analysis
+
 `notebooks/eda.ipynb` documents the exploratory data analysis of the raw Stroke Prediction dataset.
 It examines variable distributions, associations, missingness, class imbalance and rare-record disclosure risk,
 and records the preprocessing decisions that drive the pipeline.
@@ -144,6 +145,30 @@ uv run python src/generate_low_fidelity.py --config-path configs/my_config.yaml
 
 Output is written to `data/synthetic/low_fidelity.csv`.
 
+### CTGAN synthetic data (L3, multivariate)
+
+`src/generate_ctgan.py` synthesises a multivariate (L3) dataset from
+`data/processed/train.csv` using CTGAN (SDV implementation). Column types are declared explicitly
+from `configs/config.yaml` rather than relying on auto-detection, keeping the generation consistent
+with the rest of the pipeline. CTGAN was used with SDV's parameter defaults deliberately, as a comparison
+against the CART-based synthpop generator. Hyper-parameter tuning is strongly advised for best performance.
+However, the purpose of this project is to demonstrate the whole synthetic generation process, and not to maximise 
+the performance of any specific generator. Missingness is reproduced natively by CTGAN.
+
+Run it with:
+
+```bash
+uv run python src/generate_ctgan.py
+```
+
+Pass `--config-path` to use a config file other than `configs/config.yaml`:
+
+```bash
+uv run python src/generate_ctgan.py --config-path configs/my_config.yaml
+```
+
+Output is written to `data/synthetic/ctgan.csv`.
+
 ## Testing
 
 ```bash
@@ -154,8 +179,9 @@ Runs the full suite: `tests/test_config.py` (config loading and validation),
 `tests/test_io_utils.py` (shared file loading and writing),
 `tests/test_column_utils.py` (column-schema validation),
 `tests/test_prepare_dataset.py` (data loading, decisions, splitting, and
-output writing), and `tests/test_generate_low_fidelity.py` (structural checks
-on the low-fidelity generator).
+output writing),
+`tests/test_generate_low_fidelity.py` (structural checks on the low-fidelity generator),
+and `tests/test_generate_ctgan.py` (structural checks on the CTGAN generator).
 
 ## Documentation
 

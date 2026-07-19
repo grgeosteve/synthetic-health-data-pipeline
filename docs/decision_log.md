@@ -52,3 +52,31 @@ and that when re-read by pandas it is correctly handled as a missing value
 (dtype and null positions preserved). This removes a silent-corruption risk for any future
 categorical column with missingness, at no cost to the current numeric-only
 case.
+
+## 4. CTGAN generator: metadata encoded explicitly
+
+**Context.** SDV can auto-detect each column's type when building
+metadata for CTGAN, but auto-detection risks silently diverging from how
+`config.columns` classifies each column elsewhere in the pipeline.
+
+**Decision.** The column configuration in `configs/config.yaml` is treated
+as a project-wide ground truth to enforce appropriate processing by all methods.
+Column types (`sdtype`) are set explicitly from `config.columns`, not SDV's auto-detection.
+
+**Consequence.** This generator cannot silently diverge from how the rest
+of the pipeline classifies each column.
+
+## 5. CTGAN generator: defaults kept untuned
+
+**Context.** CTGAN exposes tunable hyperparameters. Tuning them would
+likely improve fidelity, but risks the comparison against synthpop
+becoming a comparison against a specifically-tuned CTGAN, not a fair
+default-vs-default read of the two methods.
+
+**Decision.** CTGAN is run at SDV's library defaults, deliberately
+untuned.
+
+**Consequence.** The comparison against synthpop is default-vs-default.
+Hyperparameter tuning is out of scope, the goal of this project is to
+demonstrate the full generation and evaluation process, not to maximise
+any single generator's performance.

@@ -76,6 +76,15 @@ class Columns(BaseModel):
             raise ValueError("At least one column must be defined across numeric, binary, and categorical.")
         return self
 
+    @property
+    def all_columns(self) -> tuple[str, ...]:
+        return tuple(self.numeric or ()) + tuple(self.binary or ()) + tuple(self.categorical or ())
+
+
+class Generation(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+    visit_sequence: list[str] | None = Field(default=None)
+
 
 class Config(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -83,6 +92,33 @@ class Config(BaseModel):
     paths: Paths
     split: Split
     columns: Columns
+    generation: Generation = Field(default_factory=Generation)
+
+    @model_validator(mode="after")
+    def check_visit_sequence_matches_columns(self) -> "Config":
+        visit_sequence = self.generation.visit_sequence
+        if visit_sequence is None:
+            return self
+
+        declared = list(self.columns.all_columns)
+
+        duplicates = sorted({c for c in visit_sequence if visit_sequence.count(c) > 1})
+        missing = sorted(set(declared) - set(visit_sequence))
+        unexpected = sorted(set(visit_sequence) - set(declared))
+
+        errors = []
+        if duplicates:
+            errors.append(f"appears more than once in visit_sequence: {duplicates}")
+        if missing:
+            errors.append(f"declared in config.columns but missing from visit_sequence: {missing}")
+        if unexpected:
+            errors.append(f"present in visit_sequence but not declared in config.columns: {unexpected}")
+ 
+        if errors:
+            raise ValueError(
+                "generation.visit_sequence does not match config.columns. " + " ".join(errors)
+            )
+        return self
 
 
 def load_config(path: Path = DEFAULT_CONFIG_PATH) -> Config:

@@ -115,3 +115,65 @@ def test_config_extra_forbid(valid_config_dict):
     
     with pytest.raises(ValidationError):
         Config.model_validate(valid_config_dict)
+
+
+def test_visit_sequence_optional(valid_config_dict, tmp_path):
+    """Tests that generation and visit_sequence can both be entirely absent."""
+    config_file = tmp_path / "config.yaml"
+    with open(config_file, "w") as f:
+        yaml.dump(valid_config_dict, f)
+
+    config = load_config(config_file)
+    assert config.generation.visit_sequence is None
+
+
+def test_visit_sequence_matching_passes(valid_config_dict, tmp_path):
+    """Tests that a visit_sequence exactly matching config.columns is accepted."""
+    valid_config_dict["generation"] = {
+        "visit_sequence": ["age", "binary_col", "cat_col"]
+    }
+    config_file = tmp_path / "config.yaml"
+    with open(config_file, "w") as f:
+        yaml.dump(valid_config_dict, f)
+
+    config = load_config(config_file)
+    assert config.generation.visit_sequence == ["age", "binary_col", "cat_col"]
+
+
+def test_visit_sequence_missing_column_rejected(valid_config_dict, tmp_path):
+    """Tests that a visit_sequence missing a declared column is rejected."""
+    valid_config_dict["generation"] = {
+        "visit_sequence": ["age", "binary_col"]  # cat_col missing
+    }
+    config_file = tmp_path / "config.yaml"
+    with open(config_file, "w") as f:
+        yaml.dump(valid_config_dict, f)
+
+    with pytest.raises(ValidationError, match="missing from visit_sequence"):
+        load_config(config_file)
+
+
+def test_visit_sequence_unexpected_column_rejected(valid_config_dict, tmp_path):
+    """Tests that a visit_sequence with an undeclared column is rejected."""
+    valid_config_dict["generation"] = {
+        "visit_sequence": ["age", "binary_col", "cat_col", "not_a_real_column"]
+    }
+    config_file = tmp_path / "config.yaml"
+    with open(config_file, "w") as f:
+        yaml.dump(valid_config_dict, f)
+
+    with pytest.raises(ValidationError, match="not declared in config.columns"):
+        load_config(config_file)
+
+
+def test_visit_sequence_duplicate_rejected(valid_config_dict, tmp_path):
+    """Tests that a visit_sequence containing a duplicate column is rejected."""
+    valid_config_dict["generation"] = {
+        "visit_sequence": ["age", "age", "binary_col", "cat_col"]
+    }
+    config_file = tmp_path / "config.yaml"
+    with open(config_file, "w") as f:
+        yaml.dump(valid_config_dict, f)
+
+    with pytest.raises(ValidationError, match="more than once"):
+        load_config(config_file)

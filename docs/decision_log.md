@@ -106,3 +106,22 @@ risk factors, and before the target `stroke`. This way conditional generation pr
 causal relationships. Output column order is explicitly restored to match the input
 (`result$syn[, names(data)]`) as a defensive guarantee, however 
 in practice, `synthpop::syn()` already preserves input column order regardless of the visit sequence.
+
+## 7. Cross-generator compatibility check enforced by both d-types and values
+**Context.** All generators, whether written in Python or R, load and write in CSV files.
+Evaluating the generated datasets requires compatibility on types and values, while the different
+languages have inherently different type inference and type-casting mechanisms.
+Additionally, checking only d-type equality between the synthetic files and the real data (`train.csv`),
+does not catch potential value substitutions. These could potentially happen silently by corrupting
+a binary column by casting the values from 0 / 1, to other integers, such as 1 / 2,
+which would preserve the categorical status, and d-type (still integer), but the column would contain
+wrong values.
+
+**Decision.** Add an explicit cross compatibility check across the generated datasets and the real
+`train.csv`, comparing both d-type, and for every categorical and binary column declared in `configs/config.yaml`.
+The check verifies that that every synthetic dataset contains matching d-types to the original dataset,
+and that the values are a subset of the original's (no unexpected values present).
+
+**Consequence.** Verified against a deliberately corrupted file, the value-set check flags it and names the
+exact column and value. This is run after any generator produces a new file.
+

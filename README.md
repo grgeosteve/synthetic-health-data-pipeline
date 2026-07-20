@@ -196,6 +196,20 @@ Rscript src/generate_synthpop.R --config-path configs/my_config.yaml
 
 Output is written to `data/synthetic/synthpop.csv`.
 
+### Cross-generator compatibility check
+
+`src/check_cross_language_compatibility.py` verifies that every synthetic file matches `data/processed/train.csv`
+in dtype, and for every column declared binary or categorical in `configs/config.yaml`, the distinct values
+in the synthetic datasets are a subset of the real dataset column values.
+
+Run it after generating any synthetic file:
+
+```bash
+uv run python src/check_cross_compatibility.py
+```
+
+Exits with a non-zero status and reports the exact column and value if any file fails. It prints `PASSED` otherwise.
+
 ## Testing
 
 ### Pytest (Python)
@@ -216,6 +230,12 @@ and `tests/test_generate_ctgan.py` (structural checks on the CTGAN generator).
 
 ```bash
 Rscript -e 'testthat::test_file("tests/testthat/test-generate_synthpop.R")'
+```
+
+### Compatibility
+
+```bash
+uv run python src/check_cross_compatibility.py
 ```
 
 ## Documentation

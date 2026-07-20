@@ -5,8 +5,8 @@ End-to-end synthetic health data pipeline: generation (CART & CTGAN), and evalua
 
 Environment setup complete (Python 3.11 + R/renv). Exploratory data analysis complete.
 Project statement and data dictionary complete. Decision log in progress, updated as the pipeline is built.
-Dataset preparation complete. Low-fidelity univariate, and high-fidelity multivariate (CTGAN) synthetic data generation complete.
-Multivariate generation through synthpop and evaluation not started.
+Dataset preparation complete. Low-fidelity univariate, and high-fidelity multivariate (synthpop, CTGAN) synthetic data generation complete.
+Evaluation not started.
 
 ## Setup
 
@@ -145,7 +145,7 @@ uv run python src/generate_low_fidelity.py --config-path configs/my_config.yaml
 
 Output is written to `data/synthetic/low_fidelity.csv`.
 
-### CTGAN synthetic data (L3, multivariate)
+### CTGAN synthetic data (L3 - multivariate)
 
 `src/generate_ctgan.py` synthesises a multivariate (L3) dataset from
 `data/processed/train.csv` using CTGAN (SDV implementation). Column types are declared explicitly
@@ -169,7 +169,36 @@ uv run python src/generate_ctgan.py --config-path configs/my_config.yaml
 
 Output is written to `data/synthetic/ctgan.csv`.
 
+### synthpop (CART) synthetic data (L3 - multivariate)
+
+`src/generate_synthpop.R` synthesises a multivariate (L3) dataset from
+`data/processed/train.csv` using synthpop's CART method. Numeric columns are cast to numeric
+and binary or categorical columns to factor before generation based on the column type configuration
+within `configs/config.yaml`, so synthpop treats them as classification targets rather than continuous
+variables. Types are restored after generation to match the real data.
+By default synthpop generates column data one at a time, in the sequence they appear in the data.
+A custom visit sequence is defined in `configs/config.yaml`, moving `heart_disease`
+directly before the target variable (`stroke`), so its generation is conditioned
+on every other predictor, including `avg_glucose_level`, `bmi`, and `smoking_status`.
+A config without this information will work as well.
+
+Run it with:
+
+```bash
+Rscript src/generate_synthpop.R
+```
+
+Pass `--config-path` to use a config file other than `configs/config.yaml`:
+
+```bash
+Rscript src/generate_synthpop.R --config-path configs/my_config.yaml
+```
+
+Output is written to `data/synthetic/synthpop.csv`.
+
 ## Testing
+
+### Pytest (Python)
 
 ```bash
 uv run pytest
@@ -182,6 +211,12 @@ Runs the full suite: `tests/test_config.py` (config loading and validation),
 output writing),
 `tests/test_generate_low_fidelity.py` (structural checks on the low-fidelity generator),
 and `tests/test_generate_ctgan.py` (structural checks on the CTGAN generator).
+
+### testthat (R)
+
+```bash
+Rscript -e 'testthat::test_file("tests/testthat/test-generate_synthpop.R")'
+```
 
 ## Documentation
 

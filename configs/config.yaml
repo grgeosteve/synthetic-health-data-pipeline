@@ -17,3 +17,17 @@ columns:
   numeric: [age, avg_glucose_level, bmi]
   binary: [hypertension, heart_disease, stroke]
   categorical: [gender, ever_married, work_type, Residence_type, smoking_status]
+
+generation:
+  visit_sequence:
+    - gender
+    - age
+    - hypertension
+    - ever_married
+    - work_type
+    - Residence_type
+    - avg_glucose_level
+    - bmi
+    - smoking_status
+    - heart_disease
+    - stroke

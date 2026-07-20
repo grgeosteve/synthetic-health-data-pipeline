@@ -80,3 +80,29 @@ untuned.
 Hyperparameter tuning is out of scope, the goal of this project is to
 demonstrate the full generation and evaluation process, not to maximise
 any single generator's performance.
+
+## 6. Explicitly define CART's variable visit sequence 
+
+**Context.** synthpop's CART synthesis conditions each variable on every
+variable generated before it, so the visit sequence determines each
+column's available predictors. Confirmed against Nowok, Raab and Dibben (Administrative
+Data Research Centre, Scotland), "Synthetic data in practice, software,
+applications and challenges" (RSS, 2017), that this is synthpop's own
+documented default behaviour.
+The dataset's raw column order happens to
+place `stroke` last (maximum available predictors) and resolves every
+named EDA relationship (age with bmi, hypertension, and heart_disease,
+ever_married with work_type, work_type and ever_married with
+smoking_status) in the correct direction, each predictor appearing before
+the column it predicts. However, `bmi`, `avg_glucose_level` and `smoking_status`
+are ordered *after* `heart_disease` by default, even though they have been shown in the
+literature to be cardiovascular risk factors.
+
+**Decision.** Explicitly define visit sequence in `configs/config.yaml`, moving `heart_disease`
+directly before the target variable (`stroke`).
+
+**Consequence.** `heart_disease` generation is conditioned on all the potentially contributing
+risk factors, and before the target `stroke`. This way conditional generation preserves potential
+causal relationships. Output column order is explicitly restored to match the input
+(`result$syn[, names(data)]`) as a defensive guarantee, however 
+in practice, `synthpop::syn()` already preserves input column order regardless of the visit sequence.

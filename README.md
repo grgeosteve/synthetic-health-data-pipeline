@@ -7,7 +7,9 @@ Environment setup complete (Python 3.11 + R/renv). Exploratory data analysis com
 Project statement, data dictionary, and decision log complete.
 Dataset preparation complete. Low-fidelity univariate, high-fidelity multivariate (synthpop, CTGAN),
 and differentially private (PAC-Synth) synthetic data generation complete.
-Evaluation harness complete across all three axes.
+Evaluation harness complete across all three axes. Results compiled in
+`outputs/results.csv`, with distribution and association figures in
+`outputs/figures/`. Technical report in progress.
 
 ## Setup
 

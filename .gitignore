@@ -30,6 +30,11 @@ renv/staging
 
 # Outputs
 outputs/*
+!outputs/ctgan_loss.csv
+!outputs/ctgan_metadata.json
+!outputs/results.csv
+!outputs/figures/
+!outputs/figures/*
 !outputs/.gitkeep
 
 # OS / editor

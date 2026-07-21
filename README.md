@@ -5,7 +5,8 @@ End-to-end synthetic health data pipeline: generation (CART & CTGAN), and evalua
 
 Environment setup complete (Python 3.11 + R/renv). Exploratory data analysis complete.
 Project statement and data dictionary complete. Decision log in progress, updated as the pipeline is built.
-Dataset preparation complete. Low-fidelity univariate, and high-fidelity multivariate (synthpop, CTGAN) synthetic data generation complete.
+Dataset preparation complete. Low-fidelity univariate, high-fidelity multivariate (synthpop, CTGAN),
+and differentially private (PAC-Synth) synthetic data generation complete.
 Evaluation not started.
 
 ## Setup
@@ -196,6 +197,25 @@ Rscript src/generate_synthpop.R --config-path configs/my_config.yaml
 
 Output is written to `data/synthetic/synthpop.csv`.
 
+### Differentially private synthetic data (L3 - DP)
+
+`src/generate_dp.py` synthesises a multivariate, differentially private dataset
+from `data/processed/train.csv` using SmartNoise's PAC-Synth. PAC-Synth was
+used in place of the stronger marginal methods (AIM, MST) because released
+smartnoise-synth is currently incompatible with both the old and new
+`private-pgm` (`mbi`) APIs. Continuous columns are discretised with fixed,
+public clinical bounds (no privacy budget spent learning them) and mapped
+back to bin midpoints after sampling. One file is written per epsilon.
+
+Run it with:
+
+```bash
+uv run python src/generate_dp.py --epsilons 0.5 1.0 3.0 8.0
+```
+
+Output is written to `data/synthetic/dp_eps{epsilon}.csv`. These files are
+not committed to the repository.
+
 ### Cross-generator compatibility check
 
 `src/check_cross_language_compatibility.py` verifies that every synthetic file matches `data/processed/train.csv`
@@ -205,7 +225,7 @@ in the synthetic datasets are a subset of the real dataset column values.
 Run it after generating any synthetic file:
 
 ```bash
-uv run python src/check_cross_compatibility.py
+uv run python src/check_cross_language_compatibility.py
 ```
 
 Exits with a non-zero status and reports the exact column and value if any file fails. It prints `PASSED` otherwise.
@@ -224,7 +244,8 @@ Runs the full suite: `tests/test_config.py` (config loading and validation),
 `tests/test_prepare_dataset.py` (data loading, decisions, splitting, and
 output writing),
 `tests/test_generate_low_fidelity.py` (structural checks on the low-fidelity generator),
-and `tests/test_generate_ctgan.py` (structural checks on the CTGAN generator).
+`tests/test_generate_ctgan.py` (structural checks on the CTGAN generator),
+and `tests/test_generate_dp.py` (structural checks on the DP generator).
 
 ### testthat (R)
 
@@ -235,7 +256,7 @@ Rscript -e 'testthat::test_file("tests/testthat/test-generate_synthpop.R")'
 ### Compatibility
 
 ```bash
-uv run python src/check_cross_compatibility.py
+uv run python src/check_cross_language_compatibility.py
 ```
 
 ## Documentation

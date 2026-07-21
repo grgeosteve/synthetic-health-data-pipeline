@@ -78,11 +78,7 @@ def main() -> None:
     config = load_config()
     reference_path = config.paths.processed_dir / "train.csv"
 
-    candidate_paths = [
-        config.paths.synthetic_dir / "low_fidelity.csv",
-        config.paths.synthetic_dir / "ctgan.csv",
-        config.paths.synthetic_dir / "synthpop.csv",
-    ]
+    candidate_paths = sorted(config.paths.synthetic_dir.glob("*.csv"))
 
     categorical_cols = (config.columns.binary or []) + (config.columns.categorical or [])
     errors = check_compatibility(reference_path, candidate_paths, categorical_cols)

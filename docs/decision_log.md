@@ -125,3 +125,33 @@ and that the values are a subset of the original's (no unexpected values present
 **Consequence.** Verified against a deliberately corrupted file, the value-set check flags it and names the
 exact column and value. This is run after any generator produces a new file.
 
+## 8. DP generator: PAC-Synth chosen over AIM/MST
+
+**Context.** AIM and MST are the stronger marginal-based DP methods and
+were the first choice. Both depend on `private-pgm` (module `mbi`), which
+was causing dependency issues with the current setup.
+ 
+**Decision.** Use PAC-Synth: Rust-backed, no `mbi`/torch dependency,
+scales to all columns without a full joint cube, preserves marginals up to
+`reporting_length=3`.
+
+**Consequence.** Continuous columns must be discretised before fitting
+(PAC-Synth is categorical-only). Bin count is kept low (10) rather than
+high-resolution (20), since a high-cardinality column makes every
+combination it appears in sparser under DP, risking that column never
+being selected for any reported marginal. This was confirmed by checking output
+spread (synthetic std vs real std) at a generous epsilon.
+
+## 9. DP bounds: fixed public clinical ranges, zero preprocessor budget
+
+**Context.** Continuous bounds could be estimated privately from the data
+(`preprocessor_eps > 0`) or fixed from public domain knowledge.
+
+**Decision.** Use fixed clinical ranges (e.g. age 0-100) with
+`preprocessor_eps=0.0`. Data-derived bounds would either leak the real
+min/max outside the DP mechanism (if read directly) or cost budget
+(if privately estimated) for a quantity that is already public knowledge
+in this domain.
+
+**Consequence.** Full epsilon budget goes to the marginals that drive
+fidelity. Verified the fixed bounds contain the real data's full range.

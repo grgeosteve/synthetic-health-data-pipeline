@@ -4,10 +4,10 @@ End-to-end synthetic health data pipeline: generation (CART & CTGAN), and evalua
 ## Status
 
 Environment setup complete (Python 3.11 + R/renv). Exploratory data analysis complete.
-Project statement and data dictionary complete. Decision log in progress, updated as the pipeline is built.
+Project statement, data dictionary, and decision log complete.
 Dataset preparation complete. Low-fidelity univariate, high-fidelity multivariate (synthpop, CTGAN),
 and differentially private (PAC-Synth) synthetic data generation complete.
-Evaluation not started.
+Evaluation harness complete across all three axes.
 
 ## Setup
 
@@ -230,6 +230,37 @@ uv run python src/check_cross_language_compatibility.py
 
 Exits with a non-zero status and reports the exact column and value if any file fails. It prints `PASSED` otherwise.
 
+### Evaluation
+
+`src/evaluate_synthetic.py` evaluates one synthetic file against
+`data/processed/train.csv`/`test.csv` across fidelity, utility, and privacy.
+
+Fidelity: univariate (KS, TVD, Hellinger), multivariate (typed association
+matrix, named clinical checks), population detection AUC, missingness
+comparison, plausibility checks.
+
+Utility: TSTR vs TRTR (ROC-AUC, PR-AUC, F1). PR-AUC is the headline metric
+given ~5% stroke prevalence.
+
+Privacy: DCR via SDMetrics, and Anonymeter's three attacks (singling out,
+linkability, inference), using `test.csv` as the control set.
+
+Run it with:
+
+```bash
+uv run python src/evaluate_synthetic.py --synthetic-path data/synthetic/synthpop.csv --name synthpop
+```
+
+`--skip-privacy` skips DCR and the Anonymeter attacks. `--skip-attacks`
+runs DCR only, skipping the Anonymeter attacks, since these can be slow or
+intractable on heavily-noised (low-epsilon DP) synthetic data.
+
+Results accumulate in `outputs/results.csv`, one row per generator.
+
+Distribution and association-structure figures are written to
+`outputs/figures/` per generator (`{name}_distributions.png`,
+`{name}_associations.png`).
+
 ## Testing
 
 ### Pytest (Python)
@@ -245,7 +276,8 @@ Runs the full suite: `tests/test_config.py` (config loading and validation),
 output writing),
 `tests/test_generate_low_fidelity.py` (structural checks on the low-fidelity generator),
 `tests/test_generate_ctgan.py` (structural checks on the CTGAN generator),
-and `tests/test_generate_dp.py` (structural checks on the DP generator).
+`tests/test_generate_dp.py` (structural checks on the DP generator),
+and `tests/test_evaluate_synthetic.py` (structural checks on every metric in the evaluation harness).
 
 ### testthat (R)
 

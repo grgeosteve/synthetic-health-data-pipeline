@@ -155,3 +155,44 @@ in this domain.
 
 **Consequence.** Full epsilon budget goes to the marginals that drive
 fidelity. Verified the fixed bounds contain the real data's full range.
+
+## 10. Evaluation: PR-AUC alongside ROC-AUC for utility
+
+**Context.** The target is rare (~5% prevalence). ROC-AUC's false-positive
+rate has the large negative class in its denominator, so it stays
+optimistic even when a model has little skill on the minority class.
+
+**Decision.** Report PR-AUC (average precision) alongside ROC-AUC and F1,
+with the TSTR-TRTR PR-AUC gap as the headline utility number.
+
+**Consequence.** Surfaced a result ROC-AUC alone hid: the low-fidelity
+generator's PR-AUC collapses to the random-classifier baseline, while its
+ROC-AUC looked only moderately degraded.
+
+## 11. Privacy evaluation: established libraries only
+
+**Context.** DCR (distance to closest record) has no implementation in
+Anonymeter, which only covers the three adversarial attacks.
+
+**Decision.** Use SDMetrics' DCROverfittingProtection and
+DCRBaselineProtection rather than a hand-rolled nearest-neighbour
+implementation, so every privacy metric in the pipeline is a named,
+published metric.
+
+**Consequence.** Verified against a training-set copy (scores as
+heavily overfit) and a fresh bootstrap resample (scores safer). Ordering
+held as expected.
+
+## 12. Synthetic data not committed to the repository
+
+**Context.** Section 4 of the project statement sets disclosure risk
+acceptance thresholds against a real-to-real baseline. A dataset failing
+any test is not treated as fit for its stated purpose, regardless of
+fidelity. Anonymeter measured singling-out risk above baseline on at
+least one generator.
+
+**Decision.** Synthetic CSVs are not version-controlled. Only aggregate
+metrics (`outputs/results.csv`) are committed, not row-level data.
+
+**Consequence.** A dataset is not published on the basis that it was
+generated. Release is gated on the Section 4 assessment.
